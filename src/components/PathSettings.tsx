@@ -62,11 +62,13 @@ export default function PathSettings({
   path,
   onChange,
   onRename,
+  expanded = false,
 }: {
   document: ApiDocument;
   path: string;
   onChange: (doc: ApiDocument, message?: string) => void;
   onRename: (path: string) => void;
+  expanded?: boolean;
 }) {
   const [name, setName] = useState(path);
   const [error, setError] = useState('');
@@ -77,7 +79,7 @@ export default function PathSettings({
       paths: { ...document.paths, [path]: { ...value, ...fields } },
     });
   return (
-    <details className="advanced-details">
+    <details className="advanced-details" open={expanded || undefined}>
       <summary>
         Path settings <span>Shared by all methods</span>
       </summary>

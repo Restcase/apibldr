@@ -31,6 +31,18 @@ browser adapters that disable file and network resolution. Visual edits and
 exports regenerate source, so original YAML comments and formatting are not
 preserved.
 
+URL imports use a cancellable, size-limited browser fetch with credentials omitted.
+They require remote CORS support; there is no server-side proxy. Examples in
+`src/examples/` are bundled at build time and parsed into independent workspaces.
+
+## Graph exploration
+
+`src/domain/graph.ts` derives connections at the selected document location.
+Canonical JSON Pointer fragments identify nodes, including escaped path/channel
+names. Local references are followed on demand, avoiding recursive expansion of
+cycles. `ApiGraph` renders a paginated SVG/HTML graph with accessible node buttons,
+local filtering, pan/zoom, breadcrumbs, and Designer navigation targets.
+
 ## Validation
 
 Basic checks provide authoring feedback. On-demand specification validation uses

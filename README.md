@@ -57,8 +57,13 @@ into an event-driven API. Undo can restore the previous workspace.
 - **Source editing:** CodeMirror JSON/YAML highlighting, contextual OpenAPI and
   AsyncAPI autocomplete, formatting, and explicit **Apply source**. Invalid or
   unfinished source remains recoverable.
-- **Import/export:** file picker or drag-and-drop, JSON/YAML round trips, and local
-  Swagger conversion. Unrecognized fields and extensions survive visual edits.
+- **API graph:** drill into paths or channels, operations, messages, and schemas;
+  follow local references and open the selected definition in Designer.
+- **Examples:** bundled Swagger Petstore (OpenAPI 3.1.0) and Streetlights Kafka
+  (AsyncAPI 2.6.0). New browser workspaces start with Petstore; saved work is retained.
+- **Import/export:** choose **Import → File or URL**, or drag a file onto the
+  workspace. Choose **Export → JSON or YAML** independently of the Source format.
+  Includes local Swagger conversion. Unrecognized fields and extensions survive visual edits.
 - **Validation:** basic authoring checks plus on-demand official specification
   schema and local JSON Pointer checks.
 - **Workspace:** automatic browser-local saving, undo/redo for the last 30 edits
@@ -71,13 +76,13 @@ edits before changing sections. The complete document remains available in Sourc
 
 ## Editing workflow
 
-1. Create a definition or import a `.json`, `.yaml`, or `.yml` file.
+1. Load an **Example**, create a definition, or **Import** from a file or direct URL.
 2. Configure General settings and reusable Components, then add Paths or Channels.
 3. In Source, press **Ctrl+Space** for suggestions; use **↑/↓**, **Enter**, and
    **Esc** to select, insert, or dismiss them. Apply source changes to resume
    visual editing.
 4. Run **Validation → Validate specification** and review the reported locations.
-5. Choose JSON or YAML in Source, then **Export** a durable copy.
+5. Explore the **Graph**, then choose **Export → JSON or YAML** for a durable copy.
 
 Form suggestions use native browser dropdowns and allow custom values.
 Autocomplete assists authoring; it does not replace validation.
@@ -112,19 +117,20 @@ changes and regression tests for document mutations.
 
 ## Project structure
 
-| Path                          | Responsibility                                                                 |
-| ----------------------------- | ------------------------------------------------------------------------------ |
-| `src/components/`             | Visual designers, scoped editors, theme and source controls                    |
+| Path                          | Responsibility                                                     |
+| ----------------------------- | ------------------------------------------------------------------ |
+| `src/components/`             | Visual designers, scoped editors, theme and source controls        |
 | `src/domain/`                 | Parsing, immutable document edits, import, validation, and history |
-| `src/editor/`                 | Context-aware source completions                                               |
-| `src/hooks/`                  | Theme preference and system appearance handling                                |
-| `src/schemas/`                | Bundled official schemas and provenance                                        |
-| `src/browser/`                | Browser adapters for local Swagger conversion                                  |
-| `src/App.tsx`                 | Workspace navigation, import/export, and persistence                           |
-| `src/styles.css`, `DESIGN.md` | Layout, tokens, and design conventions                                         |
-| `public/`                     | Application assets and response headers                                        |
-| `tests/`                      | Domain and React regression tests                                              |
-| `docs/`                       | Architecture, features, and integration configuration                          |
+| `src/editor/`                 | Context-aware source completions                                   |
+| `src/hooks/`                  | Theme preference and system appearance handling                    |
+| `src/examples/`               | Bundled example definitions and attribution                        |
+| `src/schemas/`                | Bundled official schemas and provenance                            |
+| `src/browser/`                | Browser adapters for local Swagger conversion                      |
+| `src/App.tsx`                 | Workspace navigation, import/export, and persistence               |
+| `src/styles.css`, `DESIGN.md` | Layout, tokens, and design conventions                             |
+| `public/`                     | Application assets and response headers                            |
+| `tests/`                      | Domain and React regression tests                                  |
+| `docs/`                       | Architecture, features, and integration configuration              |
 
 ## Cloudflare deployment
 
@@ -165,6 +171,9 @@ Page screenshot capture is disabled. Feedback is handled
 by that external service, which can access the page once loaded. Markdown preview
 can load images included in the Markdown.
 
+- URL imports make a browser request only when submitted. The remote server must
+  permit CORS; login credentials are omitted. Downloads time out after 30 seconds
+  and can be cancelled. If blocked, download the file and import it instead.
 - Documents are limited to **2 MB**. Do not include real credentials in examples.
 - Visual edits and exports regenerate source; YAML comments, anchors, whitespace,
   and original formatting are not retained. Source drafts preserve their text
@@ -186,4 +195,5 @@ Further details: [architecture](docs/architecture.md),
 
 ApiBldr is licensed under the [Apache License 2.0](LICENSE).
 Third-party dependencies and bundled specification schemas retain their respective
-licenses; see the [schema provenance](src/schemas/README.md) for bundled schema details.
+licenses; see [schema provenance](src/schemas/README.md) and
+[example attribution](src/examples/README.md).

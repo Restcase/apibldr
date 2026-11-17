@@ -8,7 +8,12 @@ import {
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
-import { restoreWorkspace, storageKey } from '../src/domain/workspace';
+import {
+  restoreWorkspace,
+  storageKey,
+  encodeWorkspace,
+  createWorkspace,
+} from '../src/domain/workspace';
 import { parseApi, type ApiDocument } from '../src/domain/document';
 import { validateSpecification } from '../src/domain/validation';
 
@@ -31,6 +36,7 @@ vi.mock('../src/components/SourceEditor', () => ({
 beforeEach(() => {
   vi.restoreAllMocks();
   localStorage.clear();
+  localStorage.setItem(storageKey, encodeWorkspace(createWorkspace()));
 });
 
 describe('editor workflows', () => {
@@ -113,8 +119,8 @@ describe('editor workflows', () => {
     Object.defineProperty(file, 'text', {
       value: async () => JSON.stringify(doc),
     });
-    fireEvent.change(screen.getByLabelText('Import API file'), {
-      target: { files: [file] },
+    fireEvent.drop(document.querySelector('.app-shell')!, {
+      dataTransfer: { files: [file] },
     });
     await waitFor(() =>
       expect(screen.getByLabelText('API title')).toHaveValue(doc.info.title),
@@ -159,6 +165,7 @@ describe('editor workflows', () => {
     });
     expect(path.get).not.toHaveProperty('requestBody');
     expect(await validateSpecification(saved)).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Export' }));
     await user.click(screen.getByRole('button', { name: 'Export JSON' }));
     expect(parseApi(await blobs[0].text())).toEqual(saved);
     expect(
@@ -348,6 +355,7 @@ describe('editor workflows', () => {
       'aria-pressed',
       'true',
     );
+    await user.click(screen.getByRole('button', { name: 'Export' }));
     await user.click(screen.getByRole('button', { name: 'Export YAML' }));
     expect(screen.getByRole('alert')).toBeInTheDocument();
     expect(screen.getByLabelText('API source')).toHaveValue('info: [broken');
@@ -374,8 +382,8 @@ describe('editor workflows', () => {
     Object.defineProperty(bad, 'text', {
       value: () => Promise.reject(new Error('Read failed')),
     });
-    fireEvent.change(screen.getByLabelText('Import API file'), {
-      target: { files: [bad] },
+    fireEvent.drop(document.querySelector('.app-shell')!, {
+      dataTransfer: { files: [bad] },
     });
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent('Read failed'),
@@ -470,8 +478,8 @@ describe('editor workflows', () => {
       type: 'application/yaml',
     });
     Object.defineProperty(file, 'text', { value: async () => 'invalid' });
-    fireEvent.change(screen.getByLabelText('Import API file'), {
-      target: { files: [file] },
+    fireEvent.drop(document.querySelector('.app-shell')!, {
+      dataTransfer: { files: [file] },
     });
     await waitFor(() =>
       expect(screen.getByRole('alert')).toHaveTextContent(
@@ -500,13 +508,14 @@ describe('editor workflows', () => {
       value: async () =>
         '{"openapi":"3.1.0","info":{"title":"Orders","version":"1"},"paths":{},"x-owner":"team"}',
     });
-    fireEvent.change(screen.getByLabelText('Import API file'), {
-      target: { files: [file] },
+    fireEvent.drop(document.querySelector('.app-shell')!, {
+      dataTransfer: { files: [file] },
     });
     await waitFor(() =>
       expect(screen.getByLabelText('API title')).toHaveValue('Orders'),
     );
     await user.type(screen.getByLabelText('API title'), ' v2');
+    await user.click(screen.getByRole('button', { name: 'Export' }));
     await user.click(screen.getByRole('button', { name: 'Export JSON' }));
     expect(blobs).toHaveLength(1);
     const result = JSON.parse(await blobs[0].text());

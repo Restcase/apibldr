@@ -21,6 +21,33 @@ information, external documentation, servers, tags, and security. Source complet
 suggests specification fields and reusable references. Light, dark, and system
 appearance settings persist across visits.
 
+## Examples, import, and export
+
+**Examples** loads Swagger Petstore (OpenAPI 3.1.0, API version 1.0.12) or
+Streetlights Kafka (AsyncAPI 2.6.0). Definitions are bundled and work offline in a
+loaded tab. A fresh browser workspace starts with Petstore. Existing saved work
+is retained; loading an example explicitly replaces it and can be undone.
+
+**Import** opens File and URL choices. Both accept JSON/YAML up to 2 MB and retain
+the current document on failure. URL imports require a direct HTTP(S) URL and
+browser access (CORS), omit login credentials, support cancellation, and time out
+after 30 seconds. File drag-and-drop remains available.
+
+**Export** offers JSON and YAML independently of the Source format. Unapplied
+source must parse successfully before export; invalid drafts remain editable.
+
+## API graph
+
+Use **Graph** to explore paths/channels, operations, messages, payloads, reusable
+components, and local references. Select a connection to drill down; breadcrumbs
+and **API overview** navigate back. Filter the current level, page through its
+connections, zoom, fit, or pan. The details panel opens the corresponding
+Designer section, or Source for structures without a dedicated editor.
+
+Exploration does not alter the document or contact API servers. Circular
+references can be followed safely; missing references are explained, and external
+references are not fetched. Unapplied source is excluded until applied.
+
 ## OpenAPI design
 
 Paths support shared parameters, servers, summaries, and descriptions. Rename,

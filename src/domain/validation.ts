@@ -20,7 +20,21 @@ export async function validateSpecification(
   if (!validate) {
     const load = sources[`../schemas/${key}.json`];
     if (!load) throw new Error(`No bundled schema for ${key}.`);
-    const schema = await load();
+    let schema = await load();
+    if (key === 'openapi-3.1') {
+      // Ajv supports dynamic anchors only at schema roots. This standalone
+      // document schema binds #meta to $defs/schema (object or boolean), so
+      // use that static target in a copy; leave the official bundle untouched.
+      schema = JSON.parse(
+        JSON.stringify(schema, (_key, value: unknown) => {
+          if (isObject(value) && value.$dynamicRef === '#meta') {
+            const { $dynamicRef: _ref, ...rest } = value;
+            return { ...rest, $ref: '#/$defs/schema' };
+          }
+          return value;
+        }),
+      );
+    }
     const options = { allErrors: true, strict: false, validateFormats: true };
     const ajv =
       family === 'openapi' && version === '3.1'

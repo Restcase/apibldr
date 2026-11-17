@@ -2065,3 +2065,353 @@ select {
     padding-inline: var(--space-2);
   }
 }
+
+/* Graph explorer uses the workbench's shared theme and type tokens. */
+.api-graph {
+  padding: var(--space-6);
+  min-width: 0;
+  flex: 1;
+}
+.graph-header,
+.graph-controls,
+.graph-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.graph-header h2 {
+  margin: 0;
+}
+.graph-header p {
+  margin: var(--space-2) 0 0;
+}
+.graph-breadcrumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin-block: var(--space-4);
+}
+.graph-breadcrumbs > span {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+.graph-breadcrumbs button {
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
+  border-color: transparent;
+  background: transparent;
+}
+.graph-breadcrumbs button[aria-current] {
+  font-weight: 600;
+  color: var(--accent);
+}
+.graph-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-6);
+}
+.graph-main,
+.graph-details {
+  min-width: 0;
+}
+.graph-controls {
+  padding: var(--space-3);
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: var(--radius) var(--radius) 0 0;
+  background: var(--surface);
+}
+.graph-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex: 1;
+  min-width: 180px;
+  margin: 0;
+}
+.graph-search input {
+  width: 100%;
+  min-width: 0;
+}
+.graph-zoom,
+.graph-pagination > div {
+  display: flex;
+  gap: var(--space-2);
+}
+.graph-zoom button {
+  padding-inline: var(--space-2);
+  min-width: 44px;
+}
+.graph-viewport {
+  overflow: auto;
+  max-height: 600px;
+  min-height: 300px;
+  border: 1px solid var(--line);
+  background-color: var(--bg);
+  background-image: radial-gradient(var(--line) 1px, transparent 1px);
+  background-size: 24px 24px;
+  cursor: grab;
+}
+.graph-viewport:active {
+  cursor: grabbing;
+}
+.graph-size {
+  position: relative;
+}
+.graph-scene {
+  position: relative;
+  transform-origin: top left;
+}
+.graph-edges {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  fill: none;
+  stroke: var(--control-border);
+  stroke-width: 1.5;
+}
+.graph-node {
+  position: absolute;
+  width: 256px;
+  height: 88px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: stretch;
+  text-align: left;
+  gap: var(--space-1);
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  font-size: var(--text-sm);
+}
+.graph-node strong,
+.graph-node > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.graph-node strong {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.graph-node > span {
+  color: var(--muted);
+  font-size: var(--text-xs);
+}
+.graph-node .graph-kind {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.graph-current {
+  border: 2px solid var(--accent);
+  background: var(--selected);
+}
+.graph-node:hover {
+  border-color: var(--accent);
+}
+.graph-empty {
+  position: absolute;
+  width: 256px;
+  font-size: var(--text-sm);
+}
+.graph-empty p {
+  color: var(--muted);
+}
+.graph-pagination {
+  padding: var(--space-3);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 var(--radius) var(--radius);
+  font-size: var(--text-sm);
+}
+.graph-help {
+  margin-block: var(--space-2);
+}
+.graph-details {
+  align-self: start;
+  padding: var(--space-6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow-wrap: anywhere;
+}
+.graph-details h3 {
+  margin: var(--space-2) 0 var(--space-4);
+  font-size: var(--text-lg);
+}
+.graph-details p {
+  white-space: pre-wrap;
+  font-size: var(--text-sm);
+  max-height: 240px;
+  overflow: auto;
+}
+.graph-details dl {
+  margin-block: var(--space-6);
+  font-size: var(--text-sm);
+}
+.graph-details dl > div {
+  margin-bottom: var(--space-3);
+}
+.graph-details dt {
+  color: var(--muted);
+}
+.graph-details dd {
+  margin: var(--space-1) 0 0;
+}
+.graph-details > button {
+  margin: 0 var(--space-2) var(--space-2) 0;
+}
+.graph-definition {
+  margin-top: var(--space-4);
+}
+.graph-definition summary {
+  min-height: 44px;
+  padding-block: var(--space-3);
+  cursor: pointer;
+}
+.graph-definition pre {
+  max-height: 320px;
+  overflow: auto;
+  font-size: var(--text-xs);
+  white-space: pre-wrap;
+}
+@media (min-width: 1200px) {
+  .graph-layout {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+}
+@media (max-width: 767px) {
+  .api-graph {
+    padding: var(--space-4);
+  }
+  .graph-controls {
+    align-items: stretch;
+  }
+  .graph-search {
+    flex-basis: 100%;
+  }
+  .graph-zoom {
+    flex-wrap: wrap;
+  }
+  .graph-details {
+    padding: var(--space-4);
+  }
+}
+.example-options {
+  border: 0;
+  padding: 0;
+  margin-block: var(--space-6);
+  display: grid;
+  gap: var(--space-3);
+}
+.example-options legend {
+  font-weight: 600;
+  margin-bottom: var(--space-3);
+}
+.example-option {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+}
+.example-option:has(input:checked) {
+  background: var(--selected);
+  border-color: var(--accent);
+}
+.example-option input {
+  flex: 0 0 auto;
+  margin-top: var(--space-1);
+}
+.example-option > span {
+  display: grid;
+  gap: var(--space-1);
+  font-size: var(--text-sm);
+}
+.example-option strong {
+  font-size: var(--text-md);
+}
+.import-options {
+  display: flex;
+  gap: var(--space-6);
+  border: 0;
+  padding: 0;
+  margin-block: var(--space-6);
+}
+.import-options legend {
+  margin-bottom: var(--space-2);
+  font-weight: 600;
+}
+.import-options label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+}
+.export-menu {
+  position: relative;
+}
+.export-options {
+  position: absolute;
+  z-index: 20;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  min-width: 180px;
+  padding: var(--space-2);
+  background: var(--surface);
+  border: 1px solid var(--control-border);
+  border-radius: var(--radius);
+  display: grid;
+  gap: var(--space-1);
+}
+.export-options button {
+  justify-content: flex-start;
+  border-color: transparent;
+}
+@media (max-width: 767px) {
+  .document-actions {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .document-actions button {
+    min-width: 0;
+    margin: 0;
+  }
+  .document-actions button:last-child {
+    grid-column: 1 / -1;
+  }
+  .app-rail {
+    display: grid;
+    grid-template-columns: 44px repeat(4, minmax(0, 1fr));
+    gap: 0;
+  }
+  .rail-section button {
+    flex-direction: column;
+    gap: 4px;
+    padding-inline: 2px;
+    font-size: 13px;
+  }
+  .toolbar {
+    display: grid;
+    grid-template-columns: 44px 44px repeat(2, minmax(0, 1fr));
+  }
+  .toolbar .import-button,
+  .export-menu > button {
+    width: 100%;
+    padding-inline: 8px;
+    font-size: 14px;
+  }
+}

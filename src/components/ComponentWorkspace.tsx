@@ -151,15 +151,17 @@ export default function ComponentWorkspace({
   category,
   document,
   onChange,
+  initialSelected = '',
 }: {
   category: ComponentCategory;
   document: ApiDocument;
+  initialSelected?: string;
   onChange: (document: ApiDocument, message?: string) => void;
 }) {
   const catalog = catalogFor(document, category);
   const entries = getComponents(document, category);
   const names = Object.keys(entries);
-  const [selected, setSelected] = useState('');
+  const [selected, setSelected] = useState(initialSelected);
   const [query, setQuery] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');

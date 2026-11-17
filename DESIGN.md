@@ -12,7 +12,7 @@ readability and action priority. Use the local `public/apibldr-logo.png` brand a
 ## Layout
 
 ```text
-ApiBldr   New API · Change specification      Theme · GitHub · Help · Fullscreen
+ApiBldr   New API · Examples · Change specification      Theme · GitHub · Help · Fullscreen
 ----------------------------------------------------------------------
 Menu     | API Designer                   Saved  Undo Redo Import Export
 Designer |------------------------------------------------------------
@@ -26,7 +26,7 @@ Validation                          | Operations / document checks
          | OpenAPI version                              Action feedback
 ```
 
-Designer, Source, and Validation are separate views. Source and Validation use
+Designer, Graph, Source, and Validation are separate views. Graph, Source, and Validation use
 the full content width. At 768px and wider, toolbars stay visible while forms and
 navigation scroll independently; the rail is 80px and sidebar 280px (300px at
 1280px). Below 768px the rail becomes horizontal, forms stack, and navigation
@@ -115,3 +115,18 @@ with visible hover and focus states. On narrow screens, reduce outer padding to
 Group document actions beside the brand and utilities at the right. Keep the
 navigation toggle above the left rail's workspace views. GitHub resources and
 feedback use the same header control dimensions; the footer clock stays secondary.
+
+## Graph and document transfer
+
+Graph uses the full content width with a neutral dotted canvas and a details
+panel. Show one level of connections at a time with six nodes per page; use
+breadcrumbs for context and local filtering for larger definitions. Nodes are
+keyboard-accessible buttons, with explicit text identifying type and selection.
+Keep pan/zoom within the canvas. Stack details below the canvas on narrow screens.
+Open in Designer moves focus to the editor and retains the graph location.
+
+Import opens a native dialog with File/URL choices, explicit labels, progress,
+inline errors, and cancellation. Keep the current document until import succeeds.
+Export opens a keyboard-accessible JSON/YAML choice without changing Source format.
+Examples explain replacement and Undo before loading. Match existing themes and
+control dimensions for all three flows.

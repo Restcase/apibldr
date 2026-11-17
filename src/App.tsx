@@ -20,6 +20,8 @@ import {
   Info,
   KeyRound,
   Menu,
+  Network,
+  BookOpen,
   Maximize2,
   PencilRuler,
   Layers,
@@ -66,6 +68,13 @@ import GeneralSettings, {
 import SpecificationChecks from './components/SpecificationChecks';
 import HeaderLinks from './components/HeaderLinks';
 import FooterClock from './components/FooterClock';
+import ApiGraph from './components/ApiGraph';
+import type { GraphTarget } from './domain/graph';
+import ExamplesDialog from './components/ExamplesDialog';
+import { exampleWorkspace } from './domain/examples';
+import ImportDialog from './components/ImportDialog';
+import ExportMenu from './components/ExportMenu';
+import { readDefinitionUrl } from './domain/import-url';
 import { version } from '../package.json';
 import MarkdownInput from './components/MarkdownInput';
 import PathSettings from './components/PathSettings';
@@ -91,7 +100,7 @@ function loadWorkspace(): { workspace: Workspace; error: string } {
   try {
     const raw = localStorage.getItem(storageKey);
     return {
-      workspace: raw ? restoreWorkspace(raw) : createWorkspace(),
+      workspace: raw ? restoreWorkspace(raw) : exampleWorkspace(),
       error: '',
     };
   } catch {
@@ -116,6 +125,9 @@ export default function App() {
   const theme = useTheme();
   const [initial] = useState(loadWorkspace);
   const [choosingSpec, setChoosingSpec] = useState(false);
+  const [showExamples, setShowExamples] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [graphVisited, setGraphVisited] = useState(false);
   const [generalSection, setGeneralSection] =
     useState<GeneralSection>('details');
   const [history, dispatch] = useReducer(historyReducer, {
@@ -138,20 +150,52 @@ export default function App() {
   });
   const [selected, setSelected] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
-  const [view, setView] = useState<'design' | 'source' | 'validation'>(
-    'design',
-  );
+  const [view, setView] = useState<
+    'design' | 'source' | 'validation' | 'graph'
+  >('design');
   const [navTab, setNavTab] = useState<'general' | 'paths' | 'components'>(
     'general',
   );
   const [componentCategory, setComponentCategory] =
     useState<ComponentCategory>('securitySchemes');
+  const [graphComponent, setGraphComponent] = useState('');
+  const [graphNavigationId, setGraphNavigationId] = useState(0);
+  function openGraphTarget(target: GraphTarget) {
+    setAdding(false);
+    setQuery('');
+    setNavigationOpen(true);
+    setView(target.kind === 'source' ? 'source' : 'design');
+    requestAnimationFrame(() => {
+      window.document
+        .getElementById(target.kind === 'source' ? 'source-editor' : 'editor')
+        ?.focus();
+    });
+    if (target.kind === 'info') {
+      setNavTab('general');
+      setGeneralSection('details');
+      setSelected(null);
+    } else if (target.kind === 'component') {
+      setNavTab('components');
+      setComponentCategory(target.category);
+      setGraphComponent(target.name);
+      setGraphNavigationId((id) => id + 1);
+    } else if (target.kind === 'path' || target.kind === 'operation') {
+      setNavTab('paths');
+      setSelected(
+        target.kind === 'path'
+          ? `path ${target.path}`
+          : `${target.method} ${target.path}`,
+      );
+    } else if (target.kind === 'channel') {
+      setNavTab('paths');
+      setSelected(`channel ${target.name}`);
+    }
+  }
   const [navigationOpen, setNavigationOpen] = useState(
     () => !window.matchMedia('(max-width: 767px)').matches,
   );
   const [importing, setImporting] = useState(false);
   const [online, setOnline] = useState(navigator.onLine);
-  const fileInput = useRef<HTMLInputElement>(null);
   const importBusy = useRef(false);
   const operations = useMemo(() => listOperations(document), [document]);
   const operation = operations.find(
@@ -236,27 +280,40 @@ export default function App() {
         `Source converted to ${nextFormat.toUpperCase()}.`,
       );
   }
-  async function importFile(file?: File) {
-    if (!file || importBusy.current) return;
+  async function importFile(
+    file?: File,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    if (!file || importBusy.current) return false;
     if (file.size > maxDocumentSize) {
       setError(
         'This file exceeds the 2 MB editor limit. Choose a smaller file.',
       );
-      return;
+      return false;
     }
+    return importFrom(() => file.text(), file.name, signal);
+  }
+  async function importFrom(
+    read: () => Promise<string>,
+    name: string,
+    signal?: AbortSignal,
+  ): Promise<boolean> {
+    if (importBusy.current || signal?.aborted) return false;
     if (
       dirty &&
       !window.confirm(
-        'Replace your unfinished source edit with this file? You can restore it with Undo.',
+        'Replace your unfinished source edit with this definition? You can restore it with Undo.',
       )
     )
-      return;
+      return false;
     importBusy.current = true;
     setImporting(true);
     setError('');
     try {
-      const contents = await file.text();
+      const contents = await read();
+      if (signal?.aborted) return false;
       const imported = await importDefinition(contents);
+      if (signal?.aborted) return false;
       const next = imported.document;
       const nextFormat = imported.format;
       commit(
@@ -266,7 +323,7 @@ export default function App() {
           format: nextFormat,
           dirty: false,
         },
-        `Imported ${file.name}.${imported.converted ? ' Converted Swagger 2.0 to OpenAPI 3.0.' : ''} Undo is available.`,
+        `Imported ${name}.${imported.converted ? ' Converted Swagger 2.0 to OpenAPI 3.0.' : ''} Undo is available.`,
       );
       setSelected(null);
       setAdding(false);
@@ -274,16 +331,20 @@ export default function App() {
       setNavTab('general');
       setGeneralSection('details');
       setTouchedInfo({ title: false, version: false });
+      setView('design');
+      return true;
     } catch (cause) {
+      if (signal?.aborted) return false;
       setError(
         `Import failed. ${cause instanceof Error ? cause.message : 'Choose a readable JSON or YAML file.'} Your current document is unchanged.`,
       );
+      return false;
     } finally {
       importBusy.current = false;
       setImporting(false);
     }
   }
-  function exportDocument() {
+  function exportDocument(exportFormat: Format) {
     const next = dirty ? applySource() : document;
     if (!next) {
       setView('source');
@@ -295,11 +356,11 @@ export default function App() {
         .replace(/^-|-$/g, '')
         .toLowerCase() || 'openapi';
     download(
-      serializeApi(next, format),
-      `${filename}.${format}`,
-      format === 'json' ? 'application/json' : 'application/yaml',
+      serializeApi(next, exportFormat),
+      `${filename}.${exportFormat}`,
+      exportFormat === 'json' ? 'application/json' : 'application/yaml',
     );
-    setNotice(`Exported ${filename}.${format}.`);
+    setNotice(`Exported ${filename}.${exportFormat}.`);
   }
   function createOperation(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -405,6 +466,43 @@ export default function App() {
         }
       }}
     >
+      {showExamples && (
+        <ExamplesDialog
+          onClose={() => setShowExamples(false)}
+          onLoad={(id) => {
+            commit(
+              exampleWorkspace(id),
+              'Example loaded. Undo restores the previous document and source.',
+            );
+            setSelected(null);
+            setAdding(false);
+            setQuery('');
+            setNavTab('general');
+            setGeneralSection('details');
+            setTouchedInfo({ title: false, version: false });
+            setGraphComponent('');
+            setView('design');
+          }}
+        />
+      )}
+      {showImport && (
+        <ImportDialog
+          busy={importing}
+          error={error}
+          onFile={importFile}
+          onUrl={(url, signal) =>
+            importFrom(
+              () => readDefinitionUrl(url, signal),
+              'URL definition',
+              signal,
+            )
+          }
+          onClose={() => {
+            setShowImport(false);
+            setError('');
+          }}
+        />
+      )}
       {choosingSpec && (
         <NewDocumentDialog
           onClose={() => setChoosingSpec(false)}
@@ -429,7 +527,9 @@ export default function App() {
             ? '#editor'
             : view === 'source'
               ? '#source-editor'
-              : '#validation-editor'
+              : view === 'graph'
+                ? '#graph-editor'
+                : '#validation-editor'
         }
       >
         Skip to editor
@@ -449,6 +549,12 @@ export default function App() {
             onClick={newApi}
           >
             <FilePlus2 size={16} /> New API
+          </button>
+          <button
+            disabled={importing || !!recoveryError}
+            onClick={() => setShowExamples(true)}
+          >
+            <BookOpen size={16} /> Examples
           </button>
           <button disabled={importing} onClick={() => setChoosingSpec(true)}>
             Change specification
@@ -515,6 +621,19 @@ export default function App() {
           </div>
           <div className="rail-section">
             <button
+              aria-label="Graph"
+              aria-current={view === 'graph' ? 'page' : undefined}
+              onClick={() => {
+                setGraphVisited(true);
+                setView('graph');
+              }}
+            >
+              <Network size={23} />
+              <span>Graph</span>
+            </button>
+          </div>
+          <div className="rail-section">
+            <button
               aria-label="Source"
               aria-current={view === 'source' ? 'page' : undefined}
               onClick={() => setView('source')}
@@ -548,7 +667,9 @@ export default function App() {
                   ? 'API Designer'
                   : view === 'source'
                     ? 'API Source'
-                    : 'API Validation'}
+                    : view === 'graph'
+                      ? 'API Graph'
+                      : 'API Validation'}
               </h1>
             </div>
             <div className="toolbar">
@@ -590,33 +711,24 @@ export default function App() {
               <button
                 className="import-button"
                 disabled={importing}
-                onClick={() => fileInput.current?.click()}
+                onClick={() => {
+                  setError('');
+                  setShowImport(true);
+                }}
               >
                 <Upload size={16} /> {importing ? 'Importing…' : 'Import'}
               </button>
-              <input
-                hidden
-                ref={fileInput}
-                type="file"
-                accept=".json,.yaml,.yml,application/json,application/yaml,text/yaml"
-                aria-label="Import API file"
-                onChange={(event) => {
-                  void importFile(event.target.files?.[0]);
-                  event.target.value = '';
-                }}
-              />
-              <button
-                className={
-                  (dirty && view === 'source') ||
-                  (view === 'design' && (showingComponents || adding))
-                    ? ''
-                    : 'primary'
-                }
+              <ExportMenu
                 disabled={importing}
-                onClick={exportDocument}
-              >
-                <Download size={16} /> Export {format.toUpperCase()}
-              </button>
+                primary={
+                  !(
+                    view === 'graph' ||
+                    (dirty && view === 'source') ||
+                    (view === 'design' && (showingComponents || adding))
+                  )
+                }
+                onExport={exportDocument}
+              />
             </div>
           </header>
           {theme.error && (
@@ -677,7 +789,7 @@ export default function App() {
               this open tab.
             </div>
           )}
-          {error && (
+          {error && !showImport && (
             <div className="banner error" role="alert">
               <span>{error}</span>
               <button
@@ -952,28 +1064,42 @@ export default function App() {
                     ? 'Design'
                     : view === 'source'
                       ? 'Code'
-                      : 'Validate'}
+                      : view === 'graph'
+                        ? 'Explore'
+                        : 'Validate'}
                 </span>
                 <span>/</span>
                 <strong>
                   {view === 'source'
                     ? 'Source'
-                    : view === 'validation'
-                      ? 'Document checks'
-                      : showingComponents
-                        ? componentCatalog[componentCategory].title
-                        : adding
-                          ? 'New operation'
-                          : operation
-                            ? operation.path
-                            : async && navTab === 'paths'
-                              ? 'Channels'
-                              : generalSection === 'details'
-                                ? 'Information'
-                                : generalSection[0].toUpperCase() +
-                                  generalSection.slice(1)}
+                    : view === 'graph'
+                      ? 'API graph'
+                      : view === 'validation'
+                        ? 'Document checks'
+                        : showingComponents
+                          ? componentCatalog[componentCategory].title
+                          : adding
+                            ? 'New operation'
+                            : operation
+                              ? operation.path
+                              : async && navTab === 'paths'
+                                ? 'Channels'
+                                : generalSection === 'details'
+                                  ? 'Information'
+                                  : generalSection[0].toUpperCase() +
+                                    generalSection.slice(1)}
                 </strong>
               </div>
+              {graphVisited && (
+                <div hidden={view !== 'graph'}>
+                  <ApiGraph
+                    document={document}
+                    dirty={dirty}
+                    onOpen={openGraphTarget}
+                    onSource={() => setView('source')}
+                  />
+                </div>
+              )}
               <main
                 id="editor"
                 tabIndex={-1}
@@ -994,7 +1120,8 @@ export default function App() {
                 <fieldset disabled={locked} className="editor-fieldset">
                   {showingComponents ? (
                     <ComponentWorkspace
-                      key={componentCategory}
+                      key={`${componentCategory}:${graphComponent}:${graphNavigationId}`}
+                      initialSelected={graphComponent}
                       category={componentCategory}
                       document={document}
                       onChange={updateDocument}
@@ -1018,6 +1145,20 @@ export default function App() {
                       document={document}
                       onChange={updateDocument}
                     />
+                  ) : selected?.startsWith('path ') && !adding ? (
+                    <>
+                      <h2>{selected.slice(5)}</h2>
+                      <PathSettings
+                        key={selected}
+                        document={document}
+                        path={selected.slice(5)}
+                        onChange={updateDocument}
+                        onRename={(path) =>
+                          setSelected(path ? `path ${path}` : null)
+                        }
+                        expanded
+                      />
+                    </>
                   ) : adding ? (
                     <>
                       <h2 className="content-title">Add an operation</h2>
