@@ -1,13 +1,39 @@
 import { isObject, type ApiDocument, type JsonObject } from './document';
-export const generatorUrl =
-  'https://restcase-generator.azurewebsites.net/api/gen/';
+export function getGeneratorConfig(): { url: string; error?: string } {
+  const value = import.meta.env.VITE_GENERATOR_URL?.trim();
+  if (!value) return { url: '' };
+  try {
+    const url = new URL(value);
+    if (
+      url.protocol !== 'https:' ||
+      url.username ||
+      url.password ||
+      url.search ||
+      url.hash
+    )
+      throw new Error('Invalid generator URL');
+    url.pathname = url.pathname.replace(/\/$/, '') + '/';
+    return { url: url.href };
+  } catch {
+    return {
+      url: '',
+      error:
+        'The code generation service is not configured correctly. Contact the site administrator, or export your definition to generate code elsewhere.',
+    };
+  }
+}
 export type GeneratorKind = 'clients' | 'servers';
 async function request(
   path: string,
   init: RequestInit = {},
   signal?: AbortSignal,
 ) {
-  const response = await fetch(`${generatorUrl}${path}`, { ...init, signal });
+  const config = getGeneratorConfig();
+  if (!config.url)
+    throw new Error(
+      config.error || 'Code generation is not enabled on this site.',
+    );
+  const response = await fetch(`${config.url}${path}`, { ...init, signal });
   if (!response.ok)
     throw new Error(
       `Generator returned HTTP ${response.status}. Retry or choose another target.`,

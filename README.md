@@ -60,8 +60,8 @@ into an event-driven API. Undo can restore the previous workspace.
   Swagger conversion. Unrecognized fields and extensions survive visual edits.
 - **Validation:** basic authoring checks plus on-demand official specification
   schema and local JSON Pointer checks.
-- **Code generation:** client/server targets and options from the existing
-  RestCase generator, with downloadable ZIP archives and an explicit send action.
+- **Code generation:** optional client/server targets from a configured service,
+  with downloadable ZIP archives and explicit consent before sending a definition.
 - **Workspace:** automatic browser-local saving, undo/redo for the last 30 edits
   within the tab, Markdown formatting/preview, responsive forms, and persistent
   light/dark/system themes.
@@ -125,6 +125,7 @@ changes and regression tests for document mutations.
 | `src/styles.css`, `DESIGN.md` | Layout, tokens, and design conventions                                         |
 | `public/`                     | Application assets and response headers                                        |
 | `tests/`                      | Domain and React regression tests                                              |
+| `docs/`                       | Architecture, features, and integration configuration                          |
 
 ## Cloudflare deployment
 
@@ -149,14 +150,22 @@ and Cloudflare Vite plugin versions used here are release candidates; use
 ## Storage, network use, and limits
 
 Editing, import conversion, and validation run locally. There is no application
-backend, telemetry, cloud save, or collaboration. One workspace is saved per
+backend, cloud save, or collaboration. The editor does not send usage analytics. One workspace is saved per
 browser origin; storage is not encrypted, and tabs do not coordinate edits.
 Export backups before clearing browser data or changing origins.
 
-Code generation sends the current definition to
-`restcase-generator.azurewebsites.net` only after you enable the send checkbox
-and request generation. It requires an internet connection and supports OpenAPI,
-not AsyncAPI. Markdown preview can load images included in the Markdown.
+Code generation is disabled by default. Set `VITE_GENERATOR_URL` before building
+to enable a compatible service; see [generator configuration](docs/generator.md).
+The dialog shows the destination and requires consent before sending the full
+OpenAPI definition. AsyncAPI code generation is not supported.
+
+The header includes GitHub resources and Help, and the footer shows local date/time.
+The feedback button loads the existing ApiBldr Appzi form on demand.
+Set `VITE_APPZI_PORTAL` and `VITE_APPZI_SURVEY` to use your own form, or set both
+to empty strings to disable it. These identifiers are public, not credentials.
+Page screenshot capture is disabled. Feedback is handled
+by that external service, which can access the page once loaded. Markdown preview
+can load images included in the Markdown.
 
 - Documents are limited to **2 MB**. Do not include real credentials in examples.
 - Visual edits and exports regenerate source; YAML comments, anchors, whitespace,
@@ -170,8 +179,10 @@ not AsyncAPI. Markdown preview can load images included in the Markdown.
 - A loaded tab can continue local editing offline; offline reopening is not
   supported by a service worker.
 - Not every generator language or specification edge case has been exhaustively
-  verified.
+  verified. See [supported features and limits](docs/features.md).
 
+Further details: [architecture](docs/architecture.md),
+[supported features](docs/features.md), and [contributor guide](AGENTS.md).
 
 ## License
 

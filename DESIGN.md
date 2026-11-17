@@ -12,9 +12,9 @@ readability and action priority. Use the local `public/apibldr-logo.png` brand a
 ## Layout
 
 ```text
-ApiBldr / Visual API Designer                         Light Dark System
+ApiBldr   New API · Change specification      Theme · GitHub · Help · Fullscreen
 ----------------------------------------------------------------------
-Design   | API Designer          New API  Saved  Undo Redo Import Export
+Menu     | API Designer                   Saved  Undo Redo Import Export
 Designer |------------------------------------------------------------
          | General Paths Components | Design / Information
 Code     | API Details              | API TITLE       API VERSION
@@ -36,10 +36,10 @@ height is bounded. All navigation links perform a real action. Component categor
 
 - Bundled Source Sans Pro 400/600 for interface text; JetBrains Mono for source,
   paths, and status codes. Type scale: 13, 14, 16, 20, 24px.
-- Light surfaces: `--bg #f5f7fa`, `--surface #ffffff`, `--subtle #f1f3f6`.
-  Text `#414852`, muted `#687681`, accent `#2869b2`, borders `#dce1e7`.
-- Dark surfaces: `#1c2230`, `#252d3b`, `#2e3849`; text `#e4e9f0`, muted
-  `#b3bfce`, accent `#86c5ff`, borders `#465267`.
+- Light surfaces: `--bg #f3f6fa`, `--surface #ffffff`, `--subtle #f0f4f8`.
+  Text `#26364a`, muted `#61738a`, accent `#2869b2`, borders `#dce4ee`.
+- Dark surfaces: `#121923`, `#1b2533`, `#243246`; text `#e9eff7`, muted
+  `#a8b7c9`, accent `#86c5ff`, borders `#33445a`.
 - Brand gradient: `#20b4d4` to `#383d4e` in light; `#087d9d` to `#262d3b`
   in dark. Rail: `#383d4e` / `#171d29`.
 - Spacing: 4, 8, 12, 16, 24, 32px. One-pixel borders, 6px radii, no decorative
@@ -59,12 +59,13 @@ Import shows pending/error/success and retains the current API on failure. Empty
 and filtered operation lists explain the next action. Invalid source stays
 editable and blocks conflicting visual changes/export until applied or undone.
 Autosave failures offer retry and recovery. Undo restores replacements and
-removals. Label checks as basic, never full OpenAPI validation. If CodeMirror
+removals. Distinguish basic authoring checks from on-demand specification schema checks;
+report unchecked external references. If CodeMirror
 fails to load, retain source in an editable plain-text fallback.
 
 ## Autocomplete
 
-Source suggestions follow the current OpenAPI context and reuse the theme's
+Source suggestions follow the current OpenAPI or AsyncAPI context and reuse the theme's
 surface, text, border, and selected-state tokens. Show the keyboard shortcut
 next to the editor. Enter accepts and Escape dismisses; suggestions never apply
 the draft or export it. Avoid suggestions inside comments or prose. Form fields
@@ -81,7 +82,7 @@ dense in navigation with 24–32px separation between editing sections.
 Use the existing blue accent for the primary action and selected navigation;
 neutral tabs have a strong underline on the selected item. Counts are neutral
 badges, with warning colors reserved for problems. Control borders use
-`--control-border: #8493a3` (light) / `#71839a` (dark). Selected navigation uses
+`--control-border: #7c8fa7` (light) / `#657b96` (dark). Selected navigation uses
 `--selected: #eaf2fc` / `#2c4058`. Keep cool gray surfaces and borders as the
 separation language.
 
@@ -90,3 +91,27 @@ on wide screens and stack on narrow screens. Limit form content to 960px.
 Additional metadata is behind a native disclosure; reveal it initially if it
 already contains values. Keep response forms and source shortcuts easy to find.
 Use sentence case for navigation and explain the source-only sections.
+
+## Form and workspace refinement
+
+Keep the low-contrast type scale of an expert tool: 24px/600 content headings,
+20px/600 workspace headings, 16px inputs, and 14px helper text. Source Sans Pro
+and JetBrains Mono remain the only font families.
+
+Use a cool canvas behind bordered form panels. In dark mode, the canvas is
+`#121923`, panels `#1b2533`, secondary surfaces `#243246`, and inputs `#152030`.
+Text is `#e9eff7`, muted text `#a8b7c9`, dividers `#33445a`, and control borders
+`#657b96`. The existing blue accent identifies the primary action and selection.
+Light mode uses `#f3f6fa` canvas, white panels/inputs, and `#f0f4f8` secondary
+surfaces. All values belong in the stylesheet token layer.
+
+Align form content to the left of the editor, capped at 960px. Use 24px inside
+panels and between field groups, 8px between labels and controls, and 32px at
+editor edges. Panels use the existing 6px radius and one-pixel borders. Join the
+Markdown toolbar and text area into one control. Keep toolbar buttons quiet,
+with visible hover and focus states. On narrow screens, reduce outer padding to
+16px and stack title/version fields. Preserve 44px interactive targets.
+
+Group document actions beside the brand and utilities at the right. Keep the
+navigation toggle above the left rail's workspace views. GitHub resources and
+feedback use the same header control dimensions; the footer clock stays secondary.

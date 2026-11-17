@@ -65,6 +65,9 @@ import GeneralSettings, {
 } from './components/GeneralSettings';
 import SpecificationChecks from './components/SpecificationChecks';
 import CodeGenerator from './components/CodeGenerator';
+import HeaderLinks from './components/HeaderLinks';
+import FooterClock from './components/FooterClock';
+import { version } from '../package.json';
 import MarkdownInput from './components/MarkdownInput';
 import PathSettings from './components/PathSettings';
 import AsyncChannels from './components/AsyncChannels';
@@ -447,8 +450,21 @@ export default function App() {
           alt="ApiBldr"
           className="brand-logo"
         />
+        <div className="document-actions" aria-label="API workspace actions">
+          <button
+            className="new-api-button"
+            disabled={importing}
+            onClick={newApi}
+          >
+            <FilePlus2 size={16} /> New API
+          </button>
+          <button disabled={importing} onClick={() => setChoosingSpec(true)}>
+            Change specification
+          </button>
+        </div>
         <div className="brand-actions">
           <ThemePicker value={theme.preference} onChange={theme.chooseTheme} />
+          <HeaderLinks />
           <button
             className="icon-button"
             aria-label="Toggle fullscreen"
@@ -476,6 +492,25 @@ export default function App() {
       </header>
       <div className="application-body">
         <nav className="app-rail" aria-label="Workspace views">
+          <div className="rail-section rail-toggle">
+            <button
+              className="icon-button"
+              aria-label={
+                view === 'design' && navigationOpen
+                  ? 'Hide navigation'
+                  : 'Show navigation'
+              }
+              aria-expanded={view === 'design' && navigationOpen}
+              onClick={() => {
+                if (view !== 'design') {
+                  setView('design');
+                  setNavigationOpen(true);
+                } else setNavigationOpen(!navigationOpen);
+              }}
+            >
+              <Menu size={21} />
+            </button>
+          </div>
           <div className="rail-section">
             <button
               aria-label="Designer"
@@ -516,17 +551,6 @@ export default function App() {
         <div className="application-main">
           <header className="topbar">
             <div className="page-heading">
-              <button
-                className="icon-button"
-                aria-label={
-                  navigationOpen ? 'Hide navigation' : 'Show navigation'
-                }
-                aria-expanded={navigationOpen}
-                hidden={view !== 'design'}
-                onClick={() => setNavigationOpen(!navigationOpen)}
-              >
-                <Menu size={21} />
-              </button>
               <h1>
                 {view === 'design'
                   ? 'API Designer'
@@ -536,19 +560,6 @@ export default function App() {
               </h1>
             </div>
             <div className="toolbar">
-              <button
-                className="new-api-button"
-                disabled={importing}
-                onClick={newApi}
-              >
-                <FilePlus2 size={16} /> New API
-              </button>
-              <button
-                disabled={importing}
-                onClick={() => setChoosingSpec(true)}
-              >
-                Change specification
-              </button>
               {!async && (
                 <button disabled={locked} onClick={() => setShowCodegen(true)}>
                   Generate code
@@ -1483,12 +1494,14 @@ export default function App() {
           </div>
           <footer className="statusbar">
             <span>
-              ApiBldr <span className="muted">· {specLabel(document)}</span>
+              © {new Date().getFullYear()} ApiBldr v{version}
+              <span className="muted"> · {specLabel(document)}</span>
             </span>
             <span className="status-message" role="status">
               {notice ||
                 'Ready to design. Your documents stay in this browser.'}
             </span>
+            <FooterClock />
           </footer>
         </div>
       </div>
