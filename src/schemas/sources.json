@@ -1,0 +1,57 @@
+[
+  {
+    "file": "asyncapi-2.0.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.0.0-without-$id.json",
+    "sha256": "e1380595bf9b854ce25a66c990c2a8aa7ee0698f0db9cad06d3d9ad590f5f60a"
+  },
+  {
+    "file": "asyncapi-2.1.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.1.0-without-$id.json",
+    "sha256": "b64a97e70f56a7fbc51b3bc150795997eb6fdd372764d485bf192cc8e431be07"
+  },
+  {
+    "file": "asyncapi-2.2.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.2.0-without-$id.json",
+    "sha256": "d179d88d299ba45b083b7341ca32b1f9fa69ddc90b61481b684bdc76aff0abd3"
+  },
+  {
+    "file": "asyncapi-2.3.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.3.0-without-$id.json",
+    "sha256": "c204eeaed92732d8a6bba7f7a7ec5254e59e2ae1227dd16e76b64913d79061f3"
+  },
+  {
+    "file": "asyncapi-2.4.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.4.0-without-$id.json",
+    "sha256": "0c0fa0f3f2d71d623db1ce16c82b9f864fa3f1311a864b0cf4d1cf9b6cf50d48"
+  },
+  {
+    "file": "asyncapi-2.5.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.5.0-without-$id.json",
+    "sha256": "58982e6b2d2ad0cf51515c34d15c445941905b70cff0783d865ada0cf06d507f"
+  },
+  {
+    "file": "asyncapi-2.6.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/2.6.0-without-$id.json",
+    "sha256": "be227ff668d64da62932c8409daca58fef1f7749f5d386175111f17314595137"
+  },
+  {
+    "file": "asyncapi-3.0.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/3.0.0-without-$id.json",
+    "sha256": "acefdddecb7909e2e6335f49b5acf222cf6170e303e51ab7824123981d7adfa0"
+  },
+  {
+    "file": "asyncapi-3.1.0.json",
+    "source": "https://raw.githubusercontent.com/asyncapi/spec-json-schemas/master/schemas/3.1.0-without-$id.json",
+    "sha256": "44c97489a276ad11f6f9edcbdbde47af8b66f35f97f2af9f3a289e9e24c584c5"
+  },
+  {
+    "file": "openapi-3.0.json",
+    "source": "https://spec.openapis.org/oas/3.0/schema/2024-10-18",
+    "sha256": "2385f5bbb8c37878daae73baeabe7f34b2f022a4a8c049329ee61f71796f039c"
+  },
+  {
+    "file": "openapi-3.1.json",
+    "source": "https://spec.openapis.org/oas/3.1/schema/2025-09-15",
+    "sha256": "d0a3955182364c7b5fdebfd0583ecad259a870b4a2fe86a1b0fe8785f8224fed"
+  }
+]

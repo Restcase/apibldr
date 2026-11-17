@@ -1,0 +1,11 @@
+node_modules/
+dist/
+coverage/
+.cloudflare/
+.wrangler/
+.env
+.env.*
+!.env.example
+.dev.vars*
+.DS_Store
+*.tsbuildinfo
