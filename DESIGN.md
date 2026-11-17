@@ -119,8 +119,12 @@ feedback use the same header control dimensions; the footer clock stays secondar
 ## Graph and document transfer
 
 Graph uses the full content width with a neutral dotted canvas and a details
-panel. Show one level of connections at a time with six nodes per page; use
-breadcrumbs for context and local filtering for larger definitions. Nodes are
+panel. Keep the traversed API/path/channel nodes connected on the canvas while
+expanding the selected node’s connections (six per page). Use breadcrumbs for
+context and local filtering for larger definitions. Restore filters, pagination,
+and pan position when returning to an earlier level. Animate node movement and
+new connections over 280ms, with smooth panning to the active level; disable
+animation and smooth scrolling for reduced-motion preferences. Nodes are
 keyboard-accessible buttons, with explicit text identifying type and selection.
 Keep pan/zoom within the canvas. Stack details below the canvas on narrow screens.
 Open in Designer moves focus to the editor and retains the graph location.
@@ -130,3 +134,7 @@ inline errors, and cancellation. Keep the current document until import succeeds
 Export opens a keyboard-accessible JSON/YAML choice without changing Source format.
 Examples explain replacement and Undo before loading. Match existing themes and
 control dimensions for all three flows.
+
+Example choices use a 20px radio beside a flexible text column. The whole card
+is the click target; keep native radio keyboard behavior and a visible card focus
+ring. Constrain dialog fieldsets and text columns so they wrap without overflow.

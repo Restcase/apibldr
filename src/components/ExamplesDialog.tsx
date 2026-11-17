@@ -18,7 +18,7 @@ export default function ExamplesDialog({
   return (
     <dialog
       ref={dialog}
-      className="component-dialog"
+      className="component-dialog examples-dialog"
       aria-labelledby="examples-title"
       onCancel={onClose}
     >

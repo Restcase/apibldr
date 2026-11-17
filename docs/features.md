@@ -40,8 +40,10 @@ source must parse successfully before export; invalid drafts remain editable.
 
 Use **Graph** to explore paths/channels, operations, messages, payloads, reusable
 components, and local references. Select a connection to drill down; breadcrumbs
-and **API overview** navigate back. Filter the current level, page through its
-connections, zoom, fit, or pan. The details panel opens the corresponding
+and **API overview** navigate back. Earlier nodes remain connected on the canvas
+as the next level animates into view. Returning to a level restores its filter,
+page, and pan position. Filter the current level, page through its connections,
+zoom, fit, or pan. Reduced-motion preferences disable transitions and smooth panning. The details panel opens the corresponding
 Designer section, or Source for structures without a dedicated editor.
 
 Exploration does not alter the document or contact API servers. Circular

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useLayoutEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -8,6 +8,11 @@ import {
   Network,
   Plus,
   Search,
+  Layers,
+  Radio,
+  Route,
+  Braces,
+  Box,
 } from 'lucide-react';
 import { isObject, text, type ApiDocument } from '../domain/document';
 import {
@@ -19,6 +24,23 @@ import {
 } from '../domain/graph';
 
 const pageSize = 6;
+const nodeWidth = 240;
+const nodeHeight = 112;
+const columnStep = 312;
+const rowStep = 132;
+const inset = 32;
+const nodeIcon = (kind: string) =>
+  kind === 'API'
+    ? Network
+    : kind === 'Path'
+      ? Route
+      : kind === 'Channel'
+        ? Radio
+        : kind === 'Schema' || kind === 'Property'
+          ? Braces
+          : kind === 'Operation'
+            ? Layers
+            : Box;
 export default function ApiGraph({
   document,
   dirty,
@@ -34,8 +56,18 @@ export default function ApiGraph({
   const [query, setQuery] = useState('');
   const [page, setPage] = useState(0);
   const [zoom, setZoom] = useState(1);
+  const levelState = useRef(
+    new Map<
+      string,
+      { query: string; page: number; left: number; top: number; zoom: number }
+    >(),
+  );
+  const pendingPan = useRef<{ restore?: { left: number; top: number } } | null>(
+    null,
+  );
   const viewport = useRef<HTMLDivElement>(null);
   const heading = useRef<HTMLHeadingElement>(null);
+  const selectedNode = useRef<HTMLButtonElement>(null);
   const drag = useRef<{
     x: number;
     y: number;
@@ -63,9 +95,55 @@ export default function ApiGraph({
     activePage * pageSize,
     (activePage + 1) * pageSize,
   );
-  const height = Math.max(320, visible.length * 112 + 48);
-  const width = 704;
-  const parentY = height / 2 - 44;
+  const height = Math.max(420, visible.length * rowStep + inset * 2);
+  const width = columnStep * crumbs.length + nodeWidth + inset * 2;
+  const parentY = height / 2 - nodeHeight / 2;
+  const currentX = inset + (crumbs.length - 1) * columnStep;
+  const childX = inset + crumbs.length * columnStep;
+  const nodes = [
+    ...crumbs.map((node, index) => ({
+      node,
+      x: inset + index * columnStep,
+      y: parentY,
+      context: true,
+      selected: node.id === current.id,
+    })),
+    ...visible
+      .filter((node) => !crumbs.some((crumb) => crumb.id === node.id))
+      .map((node) => ({
+        node,
+        x: childX,
+        y: inset + visible.indexOf(node) * rowStep,
+        context: false,
+        selected: false,
+      })),
+  ];
+  const reducedMotion = () =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  useLayoutEffect(() => {
+    const pending = pendingPan.current;
+    const canvas = viewport.current;
+    if (!pending || !canvas) return;
+    pendingPan.current = null;
+    const position = pending.restore ?? {
+      left: Math.max(
+        0,
+        (childX + nodeWidth + inset) * zoom - canvas.clientWidth,
+      ),
+      top: Math.max(
+        0,
+        (parentY + nodeHeight / 2) * zoom - canvas.clientHeight / 2,
+      ),
+    };
+    if (canvas.scrollTo)
+      canvas.scrollTo({
+        ...position,
+        behavior: reducedMotion() ? 'instant' : 'smooth',
+      });
+    requestAnimationFrame(() =>
+      selectedNode.current?.focus({ preventScroll: true }),
+    );
+  }, [current.id, childX, parentY, zoom]);
   const reference = graphReference(document, current);
   const value = isObject(current.value) ? current.value : {};
   const preview = useMemo(
@@ -73,29 +151,57 @@ export default function ApiGraph({
     [document, current.id],
   );
   function visit(node: GraphNode) {
+    if (node.id === current.id) {
+      heading.current?.focus({ preventScroll: true });
+      return;
+    }
+    levelState.current.set(current.id, {
+      query,
+      page: activePage,
+      left: viewport.current?.scrollLeft ?? 0,
+      top: viewport.current?.scrollTop ?? 0,
+      zoom,
+    });
     const existing = crumbs.findIndex((item) => item.id === node.id);
+    const saved = levelState.current.get(node.id);
+    // Keep the whole route visible while it fits at a readable scale.
+    // Longer routes pan instead of shrinking labels indefinitely.
+    const nextDepth = existing >= 0 ? existing + 1 : crumbs.length + 1;
+    const nextWidth = columnStep * nextDepth + nodeWidth + inset * 2;
+    const available = viewport.current?.clientWidth ?? 0;
+    const fittingZoom = (available - 24) / nextWidth;
+    if (saved) setZoom(saved.zoom);
+    else if (available > 0 && fittingZoom >= 0.75 && fittingZoom < zoom)
+      setZoom(fittingZoom);
+    pendingPan.current =
+      existing >= 0 && saved
+        ? { restore: { left: saved.left, top: saved.top } }
+        : {};
     setTrail(
       existing >= 0
         ? crumbs.slice(0, existing + 1).map((item) => item.id)
         : [...crumbs.map((item) => item.id), node.id],
     );
-    setQuery('');
-    setPage(0);
-    if (viewport.current) {
-      viewport.current.scrollTop = 0;
-      viewport.current.scrollLeft = 0;
-    }
-    requestAnimationFrame(() =>
-      heading.current?.focus({ preventScroll: true }),
-    );
+    setQuery(saved?.query ?? '');
+    setPage(saved?.page ?? 0);
   }
   function fit() {
     if (viewport.current) {
       setZoom(
-        Math.max(0.5, Math.min(1, (viewport.current.clientWidth - 24) / width)),
+        Math.max(
+          0.5,
+          Math.min(
+            1,
+            (viewport.current.clientWidth - 24) / width,
+            (viewport.current.clientHeight - 24) / height,
+          ),
+        ),
       );
-      viewport.current.scrollTop = 0;
-      viewport.current.scrollLeft = 0;
+      viewport.current.scrollTo?.({
+        top: 0,
+        left: 0,
+        behavior: reducedMotion() ? 'instant' : 'smooth',
+      });
     }
   }
   return (
@@ -115,7 +221,8 @@ export default function ApiGraph({
         <div>
           <h2>Explore your API</h2>
           <p className="muted">
-            Follow a connection to drill down. Your definition stays unchanged.
+            Follow connections from your API to its definitions. Your route
+            stays on the canvas.
           </p>
         </div>
         <button onClick={() => visit(graphNode(document)!)}>
@@ -223,42 +330,82 @@ export default function ApiGraph({
                   className="graph-edges"
                   aria-hidden="true"
                 >
-                  {visible.map((node, index) => (
+                  {crumbs.slice(1).map((node, index) => (
                     <path
-                      key={node.id}
-                      d={`M 288 ${parentY + 44} C 344 ${parentY + 44}, 344 ${index * 112 + 76}, 400 ${index * 112 + 76}`}
+                      className="graph-route-edge"
+                      key={`route-${node.id}`}
+                      d={`M ${inset + index * columnStep + nodeWidth} ${parentY + nodeHeight / 2} H ${inset + (index + 1) * columnStep}`}
                     />
                   ))}
+                  {visible.map((node, index) => {
+                    const ancestor = crumbs.findIndex(
+                      (crumb) => crumb.id === node.id,
+                    );
+                    const x =
+                      ancestor >= 0 ? inset + ancestor * columnStep : childX;
+                    const y =
+                      ancestor >= 0
+                        ? parentY + nodeHeight / 2
+                        : inset + index * rowStep + nodeHeight / 2;
+                    return (
+                      <path
+                        className="graph-connection-edge"
+                        key={`${current.id}-${node.id}`}
+                        d={
+                          ancestor >= 0
+                            ? `M ${currentX + nodeWidth / 2} ${parentY} C ${currentX + nodeWidth / 2} ${parentY - 60}, ${x + nodeWidth / 2} ${parentY - 60}, ${x + nodeWidth / 2} ${parentY}`
+                            : `M ${currentX + nodeWidth} ${parentY + nodeHeight / 2} C ${currentX + nodeWidth + 36} ${parentY + nodeHeight / 2}, ${childX - 36} ${y}, ${x} ${y}`
+                        }
+                      />
+                    );
+                  })}
                 </svg>
-                <div
-                  className="graph-node graph-current"
-                  style={{ left: 32, top: parentY }}
-                >
-                  <span className="graph-kind">{current.kind} · selected</span>
-                  <strong title={current.label}>{current.label}</strong>
-                  <span>{connections.length} connections</span>
-                </div>
-                {visible.map((node, index) => (
-                  <button
-                    className="graph-node"
-                    style={{ left: 400, top: index * 112 + 32 }}
-                    key={node.id}
-                    onClick={() => visit(node)}
-                    aria-label={`Explore ${node.label}`}
-                    title={node.label}
-                  >
-                    <span className="graph-kind">
-                      {node.kind}
-                      <ChevronRight size={14} />
-                    </span>
-                    <strong>{node.label}</strong>
-                    <span>{node.summary || 'Explore definition'}</span>
-                  </button>
-                ))}
+                {nodes.map(({ node, x, y, context, selected }) => {
+                  const Icon = nodeIcon(node.kind);
+                  return (
+                    <button
+                      ref={selected ? selectedNode : undefined}
+                      className={`graph-node ${selected ? 'graph-current' : context ? 'graph-ancestor' : 'graph-child'}`}
+                      style={{ left: x, top: y }}
+                      key={node.id}
+                      onClick={() => visit(node)}
+                      aria-label={
+                        selected
+                          ? `Selected ${node.label}`
+                          : context
+                            ? `Return to ${node.label}`
+                            : `Explore ${node.label}`
+                      }
+                      aria-current={selected ? 'location' : undefined}
+                      title={node.label}
+                    >
+                      <span className="graph-kind">
+                        <span>
+                          <Icon size={15} aria-hidden="true" /> {node.kind}
+                        </span>
+                        {selected ? (
+                          <span className="graph-selected-label">Selected</span>
+                        ) : context ? (
+                          <ArrowLeft size={14} />
+                        ) : (
+                          <ChevronRight size={14} />
+                        )}
+                      </span>
+                      <strong>{node.label}</strong>
+                      <span>
+                        {selected
+                          ? `${connections.length} connections`
+                          : context
+                            ? 'Earlier in your route'
+                            : node.summary || 'Explore definition'}
+                      </span>
+                    </button>
+                  );
+                })}
                 {!visible.length && (
                   <div
                     className="graph-empty"
-                    style={{ left: 400, top: parentY - 16 }}
+                    style={{ left: childX, top: parentY - 16 }}
                   >
                     <strong>
                       {query
@@ -283,34 +430,44 @@ export default function ApiGraph({
             </div>
           </div>
           <div className="graph-pagination">
+            <span className="sr-only" aria-live="polite">
+              Selected {current.label}. Level {crumbs.length}.
+            </span>
             <span role="status">
               {filtered.length
                 ? `${activePage * pageSize + 1}–${Math.min((activePage + 1) * pageSize, filtered.length)} of ${filtered.length} connections`
                 : '0 connections'}
               {query && ` matching “${query}”`}
             </span>
-            <div>
-              <button
-                disabled={activePage === 0}
-                onClick={() => setPage(activePage - 1)}
-              >
-                Previous
-              </button>
-              <button
-                disabled={(activePage + 1) * pageSize >= filtered.length}
-                onClick={() => setPage(activePage + 1)}
-              >
-                Next
-              </button>
-            </div>
+            {filtered.length > pageSize && (
+              <div>
+                <button
+                  disabled={activePage === 0}
+                  onClick={() => setPage(activePage - 1)}
+                >
+                  Previous
+                </button>
+                <button
+                  disabled={(activePage + 1) * pageSize >= filtered.length}
+                  onClick={() => setPage(activePage + 1)}
+                >
+                  Next
+                </button>
+              </div>
+            )}
           </div>
           <p className="graph-help muted small">
-            Select a node to follow its connections. Drag the canvas or scroll
-            to pan.
+            Your route stays connected. Select an earlier node to go back. Drag
+            or scroll to pan; Fit shows more of the route.
           </p>
         </div>
         <aside className="graph-details" aria-label="Selected node details">
-          <span className="eyebrow">{current.kind}</span>
+          <div className="graph-details-heading">
+            <span className="eyebrow">
+              Selected {current.kind.toLowerCase()}
+            </span>
+            <span className="graph-depth">Level {crumbs.length}</span>
+          </div>
           <h3 ref={heading} tabIndex={-1}>
             {current.label}
           </h3>
@@ -328,12 +485,6 @@ export default function ApiGraph({
                   <dd>{String(value[key])}</dd>
                 </div>
               ))}
-            <div>
-              <dt>Location</dt>
-              <dd>
-                <code>{current.id}</code>
-              </dd>
-            </div>
           </dl>
           {reference.warning && (
             <p className="inline-notice">{reference.warning}</p>
@@ -351,6 +502,10 @@ export default function ApiGraph({
           )}
           <details key={current.id} className="graph-definition">
             <summary>View definition</summary>
+            <p className="graph-location">
+              <span>Location</span>
+              <code>{current.id}</code>
+            </p>
             <pre>{preview.slice(0, 12000)}</pre>
             {preview.length > 12000 && (
               <p className="muted">

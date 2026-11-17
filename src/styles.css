@@ -2083,6 +2083,8 @@ select {
 }
 .graph-header h2 {
   margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
 }
 .graph-header p {
   margin: var(--space-2) 0 0;
@@ -2091,7 +2093,7 @@ select {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-1);
-  margin-block: var(--space-4);
+  margin-block: var(--space-3);
 }
 .graph-breadcrumbs > span {
   display: inline-flex;
@@ -2150,8 +2152,8 @@ select {
 }
 .graph-viewport {
   overflow: auto;
-  max-height: 600px;
-  min-height: 300px;
+  height: clamp(420px, calc(100dvh - 340px), 640px);
+  overscroll-behavior: contain;
   border: 1px solid var(--line);
   background-color: var(--bg);
   background-image: radial-gradient(var(--line) 1px, transparent 1px);
@@ -2167,6 +2169,7 @@ select {
 .graph-scene {
   position: relative;
   transform-origin: top left;
+  transition: transform 280ms ease;
 }
 .graph-edges {
   position: absolute;
@@ -2178,8 +2181,8 @@ select {
 }
 .graph-node {
   position: absolute;
-  width: 256px;
-  height: 88px;
+  width: 240px;
+  height: 112px;
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -2191,6 +2194,13 @@ select {
   border-radius: var(--radius);
   background: var(--surface);
   font-size: var(--text-sm);
+  white-space: normal;
+  transition:
+    left 280ms ease,
+    top 280ms ease,
+    background-color 180ms ease,
+    border-color 180ms ease;
+  animation: graph-node-enter 280ms ease both;
 }
 .graph-node strong,
 .graph-node > span {
@@ -2202,6 +2212,12 @@ select {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 600;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  line-height: 1.4;
 }
 .graph-node > span {
   color: var(--muted);
@@ -2212,6 +2228,44 @@ select {
   align-items: center;
   justify-content: space-between;
 }
+.graph-kind > span:first-child {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.graph-selected-label {
+  color: var(--accent);
+  font-weight: 600;
+}
+.graph-ancestor {
+  background: var(--subtle);
+}
+.graph-route-edge {
+  stroke: var(--accent);
+  stroke-width: 2;
+  transition: d 280ms ease;
+}
+.graph-connection-edge {
+  animation: graph-edge-enter 280ms ease both;
+}
+@keyframes graph-node-enter {
+  from {
+    opacity: 0;
+    transform: translateX(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+@keyframes graph-edge-enter {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
 .graph-current {
   border: 2px solid var(--accent);
   background: var(--selected);
@@ -2221,7 +2275,7 @@ select {
 }
 .graph-empty {
   position: absolute;
-  width: 256px;
+  width: 240px;
   font-size: var(--text-sm);
 }
 .graph-empty p {
@@ -2245,6 +2299,20 @@ select {
   border-radius: var(--radius);
   background: var(--surface);
   overflow-wrap: anywhere;
+}
+.graph-details-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--muted);
+  font-size: var(--text-sm);
+}
+.graph-depth {
+  white-space: nowrap;
+  border-radius: var(--radius);
+  background: var(--subtle);
+  padding: var(--space-1) var(--space-2);
 }
 .graph-details h3 {
   margin: var(--space-2) 0 var(--space-4);
@@ -2271,6 +2339,24 @@ select {
 }
 .graph-details > button {
   margin: 0 var(--space-2) var(--space-2) 0;
+  width: 100%;
+}
+.graph-location {
+  display: grid;
+  gap: var(--space-2);
+}
+.graph-location > span {
+  color: var(--muted);
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph-node,
+  .graph-size,
+  .graph-scene,
+  .graph-route-edge,
+  .graph-connection-edge {
+    animation: none;
+    transition: none;
+  }
 }
 .graph-definition {
   margin-top: var(--space-4);
@@ -2308,10 +2394,24 @@ select {
     padding: var(--space-4);
   }
 }
+.examples-dialog {
+  width: min(640px, calc(100% - 32px));
+}
+.examples-dialog form {
+  display: grid;
+  gap: var(--space-4);
+  min-width: 0;
+}
+.examples-dialog h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
 .example-options {
   border: 0;
   padding: 0;
-  margin-block: var(--space-6);
+  margin: 0;
+  min-inline-size: 0;
   display: grid;
   gap: var(--space-3);
 }
@@ -2320,8 +2420,9 @@ select {
   margin-bottom: var(--space-3);
 }
 .example-option {
-  display: flex;
-  align-items: flex-start;
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-3);
   padding: var(--space-4);
   border: 1px solid var(--control-border);
@@ -2332,12 +2433,28 @@ select {
   background: var(--selected);
   border-color: var(--accent);
 }
-.example-option input {
-  flex: 0 0 auto;
-  margin-top: var(--space-1);
+.example-option:hover {
+  border-color: var(--accent);
 }
-.example-option > span {
+.example-option:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+.example-option input[type='radio'],
+.import-options input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  padding: 0;
+  margin: 2px 0 0;
+  flex: 0 0 20px;
+  accent-color: var(--accent);
+}
+.example-option > span:not(.sr-only) {
   display: grid;
+  min-width: 0;
+  color: var(--text);
+  overflow-wrap: anywhere;
   gap: var(--space-1);
   font-size: var(--text-sm);
 }
