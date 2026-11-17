@@ -5,10 +5,9 @@ repository contains the modern React + TypeScript implementation of
 [ApiBldr](https://apibldr.com), prepared for Cloudflare Workers Static Assets.
 
 The implementation runs locally in your browser, with reusable components,
-contextual guidance, autocomplete, and light/dark/system themes. The existing
-public site and this repository are separate deployments.
+contextual guidance, autocomplete, and light/dark/system themes.
 
-[Open the current ApiBldr app](https://apibldr-next.gena-levin.workers.dev).
+[Open ApiBldr](https://apibldr.com).
 
 ## Quick start
 
