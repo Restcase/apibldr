@@ -97,7 +97,8 @@ export default function ApiGraph({
   );
   const height = Math.max(420, visible.length * rowStep + inset * 2);
   const width = columnStep * crumbs.length + nodeWidth + inset * 2;
-  const parentY = height / 2 - nodeHeight / 2;
+  // Keep the route in the first visible screen even when its connections scroll.
+  const parentY = 210 - nodeHeight / 2;
   const currentX = inset + (crumbs.length - 1) * columnStep;
   const childX = inset + crumbs.length * columnStep;
   const nodes = [
