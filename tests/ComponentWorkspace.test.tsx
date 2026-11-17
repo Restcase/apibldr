@@ -40,6 +40,37 @@ function Harness({
 const saved = () => JSON.parse(screen.getByTestId('definition').textContent!);
 
 describe('visual components', () => {
+  it('repairs imported reusable path parameters without changing references', async () => {
+    const user = userEvent.setup();
+    render(
+      <Harness
+        category="parameters"
+        initial={{
+          ...emptyDocument(),
+          paths: {
+            '/items/{id}': {
+              parameters: [{ $ref: '#/components/parameters/id' }],
+            },
+          },
+          components: {
+            parameters: {
+              id: {
+                name: 'id',
+                in: 'path',
+                required: false,
+                schema: { type: 'string' },
+              },
+            },
+          },
+        }}
+      />,
+    );
+    await user.click(screen.getByLabelText('Required parameter'));
+    expect(saved().components.parameters.id.required).toBe(true);
+    expect(saved().paths['/items/{id}'].parameters).toEqual([
+      { $ref: '#/components/parameters/id' },
+    ]);
+  });
   it.each(componentCategories)(
     'keeps %s creation in Designer with guidance and quick adds',
     async (category) => {

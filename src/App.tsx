@@ -64,7 +64,6 @@ import GeneralSettings, {
   type GeneralSection,
 } from './components/GeneralSettings';
 import SpecificationChecks from './components/SpecificationChecks';
-import CodeGenerator from './components/CodeGenerator';
 import HeaderLinks from './components/HeaderLinks';
 import FooterClock from './components/FooterClock';
 import { version } from '../package.json';
@@ -116,7 +115,6 @@ function download(content: string, filename: string, type: string) {
 export default function App() {
   const theme = useTheme();
   const [initial] = useState(loadWorkspace);
-  const [showCodegen, setShowCodegen] = useState(false);
   const [choosingSpec, setChoosingSpec] = useState(false);
   const [generalSection, setGeneralSection] =
     useState<GeneralSection>('details');
@@ -407,12 +405,6 @@ export default function App() {
         }
       }}
     >
-      {showCodegen && (
-        <CodeGenerator
-          document={document}
-          onClose={() => setShowCodegen(false)}
-        />
-      )}
       {choosingSpec && (
         <NewDocumentDialog
           onClose={() => setChoosingSpec(false)}
@@ -560,11 +552,6 @@ export default function App() {
               </h1>
             </div>
             <div className="toolbar">
-              {!async && (
-                <button disabled={locked} onClick={() => setShowCodegen(true)}>
-                  Generate code
-                </button>
-              )}
               <span className="save-status" role="status">
                 {saved && !recoveryError ? (
                   <>
@@ -1375,9 +1362,10 @@ export default function App() {
                   </div>
                 )}
                 <p className="validation-scope">
-                  Checks titles, versions, response descriptions, status codes,
-                  and duplicate operation IDs. Run specification validation
-                  below for structural checks and local references.
+                  Checks titles, versions, required path parameters, response
+                  descriptions, status codes, and duplicate operation IDs. Run
+                  specification validation below for structural checks and local
+                  references.
                 </p>
                 {diagnostics.length ? (
                   <ul>

@@ -53,6 +53,34 @@ x-internal:
 `;
 
 describe('document round trips', () => {
+  it('reports invalid path parameters at component, path and operation levels without inspecting example data', () => {
+    const doc = emptyDocument();
+    const invalid = { name: 'id', in: 'path', required: false };
+    doc.components = {
+      parameters: { id: invalid },
+      examples: { data: { value: invalid } },
+    };
+    doc.paths = {
+      '/items/{id}': {
+        parameters: [invalid, { $ref: '#/components/parameters/id' }],
+        get: {
+          parameters: [
+            { name: 'id', in: 'path' },
+            { name: 'filter', in: 'query' },
+          ],
+          responses: { '200': { description: 'OK' } },
+        },
+      },
+      'x-example': { parameters: [invalid] },
+    };
+    const before = JSON.stringify(doc);
+    expect(checkDocument(doc).map((issue) => issue.location)).toEqual([
+      'components.parameters.id',
+      '/items/{id}.parameters[0]',
+      'GET /items/{id}.parameters[0]',
+    ]);
+    expect(JSON.stringify(doc)).toBe(before);
+  });
   it.each(methods)('creates a usable %s operation', (method) => {
     const operation = listOperations(
       addOperation(emptyDocument(), '/items', method),

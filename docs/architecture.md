@@ -41,10 +41,8 @@ prove every semantic or runtime constraint.
 
 ## External integrations
 
-Code generation is disabled unless a deployment supplies `VITE_GENERATOR_URL`.
-The browser retrieves target lists and options from that service. Sending a full
-OpenAPI definition requires an explicit consent checkbox and Generate action.
-See [generator configuration](generator.md) for the service contract.
+The retired code-generation integration makes no requests. The editor exports
+YAML and JSON definitions locally for use with external tooling.
 
 The feedback control loads the configured Appzi widget on demand, with screenshot
 capture disabled. Public portal and survey IDs can be overridden at build time. Its form,

@@ -8,6 +8,8 @@ The implementation runs locally in your browser, with reusable components,
 contextual guidance, autocomplete, and light/dark/system themes. The existing
 public site and this repository are separate deployments.
 
+[Open the current ApiBldr app](https://apibldr-next.gena-levin.workers.dev).
+
 ## Quick start
 
 Use Node **24.22.0** (recorded in `.nvmrc`) and npm. With
@@ -60,8 +62,6 @@ into an event-driven API. Undo can restore the previous workspace.
   Swagger conversion. Unrecognized fields and extensions survive visual edits.
 - **Validation:** basic authoring checks plus on-demand official specification
   schema and local JSON Pointer checks.
-- **Code generation:** optional client/server targets from a configured service,
-  with downloadable ZIP archives and explicit consent before sending a definition.
 - **Workspace:** automatic browser-local saving, undo/redo for the last 30 edits
   within the tab, Markdown formatting/preview, responsive forms, and persistent
   light/dark/system themes.
@@ -116,7 +116,7 @@ changes and regression tests for document mutations.
 | Path                          | Responsibility                                                                 |
 | ----------------------------- | ------------------------------------------------------------------------------ |
 | `src/components/`             | Visual designers, scoped editors, theme and source controls                    |
-| `src/domain/`                 | Parsing, immutable document edits, import, validation, history, and generation |
+| `src/domain/`                 | Parsing, immutable document edits, import, validation, and history |
 | `src/editor/`                 | Context-aware source completions                                               |
 | `src/hooks/`                  | Theme preference and system appearance handling                                |
 | `src/schemas/`                | Bundled official schemas and provenance                                        |
@@ -154,10 +154,9 @@ backend, cloud save, or collaboration. The editor does not send usage analytics.
 browser origin; storage is not encrypted, and tabs do not coordinate edits.
 Export backups before clearing browser data or changing origins.
 
-Code generation is disabled by default. Set `VITE_GENERATOR_URL` before building
-to enable a compatible service; see [generator configuration](docs/generator.md).
-The dialog shows the destination and requires consent before sending the full
-OpenAPI definition. AsyncAPI code generation is not supported.
+Built-in code generation has been retired because the generation service is no
+longer available. Export your definition as YAML or JSON to use it with external
+tooling. See [code generation status](docs/generator.md).
 
 The header includes GitHub resources and Help, and the footer shows local date/time.
 The feedback button loads the existing ApiBldr Appzi form on demand.
@@ -178,7 +177,7 @@ can load images included in the Markdown.
   modeling is available within API documents.
 - A loaded tab can continue local editing offline; offline reopening is not
   supported by a service worker.
-- Not every generator language or specification edge case has been exhaustively
+- Not every specification edge case has been exhaustively
   verified. See [supported features and limits](docs/features.md).
 
 Further details: [architecture](docs/architecture.md),

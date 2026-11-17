@@ -77,11 +77,15 @@ export function Flag({
   label,
   checked,
   disabled,
+  invalid,
+  describedBy,
   onChange,
 }: {
   label: string;
   checked: boolean;
   disabled?: boolean;
+  invalid?: boolean;
+  describedBy?: string;
   onChange: (value: boolean) => void;
 }) {
   return (
@@ -90,6 +94,8 @@ export function Flag({
         type="checkbox"
         checked={checked}
         disabled={disabled}
+        aria-invalid={invalid || undefined}
+        aria-describedby={describedBy}
         onChange={(event) => onChange(event.target.checked)}
       />
       {label}
@@ -517,6 +523,9 @@ export default function ComponentFields({
   patch: (patch: JsonObject) => void;
   schemas: string[];
 }) {
+  const requiredHintId = useId();
+  const invalidPathParameter =
+    category === 'parameters' && value.in === 'path' && value.required !== true;
   if (value.$ref)
     return (
       <div className="inline-notice">
@@ -653,12 +662,23 @@ export default function ComponentFields({
           />
           <Flag
             label="Required parameter"
-            checked={value.in === 'path' || value.required === true}
-            disabled={value.in === 'path'}
+            checked={value.required === true}
+            disabled={value.in === 'path' && value.required === true}
+            invalid={invalidPathParameter}
+            describedBy={value.in === 'path' ? requiredHintId : undefined}
             onChange={(required) => patch({ required })}
           />
           {value.in === 'path' && (
-            <p className="muted small">Path parameters are always required.</p>
+            <p
+              id={requiredHintId}
+              className={
+                invalidPathParameter ? 'error-text small' : 'muted small'
+              }
+            >
+              {invalidPathParameter
+                ? 'This path parameter must be required. Select Required parameter to fix the definition.'
+                : 'Path parameters are always required.'}
+            </p>
           )}
         </>
       )}

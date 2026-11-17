@@ -47,9 +47,8 @@ leaving Designer. Message payloads can use inline or reusable schemas.
 
 ## Integrations and workspace tools
 
-Optional code generation produces client/server ZIP archives through a configured
-OpenAPI generator service. Generation requires consent before uploading the
-current definition. AsyncAPI code generation is not supported.
+Built-in code generation is no longer available. Export OpenAPI or AsyncAPI
+definitions as YAML or JSON for use with external tooling.
 
 Header controls provide repository, issues, releases, feedback, and fullscreen
 access. The footer displays local date/time. Feedback uses the configured Appzi

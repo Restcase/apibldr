@@ -1,8 +1,16 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import App from '../src/App';
 import { restoreWorkspace, storageKey } from '../src/domain/workspace';
+import { parseApi, type ApiDocument } from '../src/domain/document';
+import { validateSpecification } from '../src/domain/validation';
 
 vi.mock('../src/components/SourceEditor', () => ({
   default: ({
@@ -26,6 +34,137 @@ beforeEach(() => {
 });
 
 describe('editor workflows', () => {
+  it('repairs imported parameters and removes an empty request body while preserving shared references through reload and export', async () => {
+    const user = userEvent.setup();
+    const longDescription = 'Long request description with details.\n'.repeat(
+      150,
+    );
+    const doc: ApiDocument = {
+      openapi: '3.0.3',
+      info: { title: 'Parameter regression', version: '1.0' },
+      paths: {
+        '/ratings/{person}/{user}': {
+          parameters: [{ $ref: '#/components/parameters/person' }],
+          get: {
+            parameters: [
+              {
+                name: 'user',
+                in: 'path',
+                required: false,
+                schema: { type: 'string' },
+                'x-preserve': true,
+              },
+            ],
+            requestBody: { required: false },
+            responses: { '200': { description: 'OK' } },
+          },
+          post: {
+            parameters: [
+              {
+                name: 'user',
+                in: 'path',
+                required: true,
+                schema: { type: 'string' },
+              },
+            ],
+            requestBody: {
+              description: longDescription,
+              content: {
+                'application/json': {
+                  schema: { $ref: '#/components/schemas/Rating' },
+                },
+              },
+            },
+            responses: { '200': { description: 'OK' } },
+          },
+        },
+      },
+      components: {
+        parameters: {
+          person: {
+            name: 'person',
+            in: 'path',
+            required: true,
+            schema: { type: 'integer' },
+          },
+        },
+        schemas: {
+          Rating: {
+            type: 'object',
+            properties: { score: { type: 'integer' } },
+          },
+        },
+      },
+    };
+    const blobs: Blob[] = [];
+    vi.stubGlobal(
+      'URL',
+      class extends URL {
+        static createObjectURL(blob: Blob) {
+          blobs.push(blob);
+          return 'blob:test';
+        }
+        static revokeObjectURL() {}
+      },
+    );
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+    const first = render(<App />);
+    const file = new File([], 'parameters.json');
+    Object.defineProperty(file, 'text', {
+      value: async () => JSON.stringify(doc),
+    });
+    fireEvent.change(screen.getByLabelText('Import API file'), {
+      target: { files: [file] },
+    });
+    await waitFor(() =>
+      expect(screen.getByLabelText('API title')).toHaveValue(doc.info.title),
+    );
+    await user.click(screen.getByRole('button', { name: 'Paths' }));
+    await user.click(screen.getByRole('button', { name: /get\s*\/ratings/ }));
+    await user.click(screen.getByText('Parameters', { selector: 'summary' }));
+    await user.click(screen.getByLabelText('Required parameter'));
+    const fields = screen
+      .getByLabelText('Parameter name')
+      .closest('.component-fields') as HTMLElement;
+    for (let index = 0; index < 20; index++)
+      fireEvent.change(
+        within(fields).getByLabelText('Description (optional)'),
+        { target: { value: longDescription + index } },
+      );
+    await user.click(screen.getByText('Request body', { selector: 'summary' }));
+    await user.selectOptions(
+      screen.getByLabelText('Request body definition'),
+      'No body',
+    );
+    await user.click(screen.getByRole('button', { name: 'Source' }));
+    await screen.findByLabelText('API source');
+    await user.click(screen.getByRole('button', { name: 'Validation' }));
+    first.unmount();
+    render(<App />);
+    const saved = restoreWorkspace(localStorage.getItem(storageKey)!).document;
+    const path = saved.paths!['/ratings/{person}/{user}'];
+    expect(path.parameters).toEqual(
+      doc.paths!['/ratings/{person}/{user}'].parameters,
+    );
+    expect(path.post).toEqual(doc.paths!['/ratings/{person}/{user}'].post);
+    expect(saved.components).toEqual(doc.components);
+    expect(path.get).toMatchObject({
+      parameters: [
+        {
+          required: true,
+          description: longDescription + '19',
+          'x-preserve': true,
+        },
+      ],
+    });
+    expect(path.get).not.toHaveProperty('requestBody');
+    expect(await validateSpecification(saved)).toEqual([]);
+    await user.click(screen.getByRole('button', { name: 'Export JSON' }));
+    expect(parseApi(await blobs[0].text())).toEqual(saved);
+    expect(
+      screen.queryByRole('button', { name: 'Generate code' }),
+    ).not.toBeInTheDocument();
+  });
   it('shows required-field errors after blur and clears them when corrected', async () => {
     const user = userEvent.setup();
     render(<App />);

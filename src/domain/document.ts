@@ -255,13 +255,37 @@ export function checkDocument(doc: ApiDocument): Diagnostic[] {
       message: 'Give your API a version.',
     });
   if (isAsync(doc)) return [...issues, ...checkAsync(doc)];
+  function checkParameter(value: unknown, location: string) {
+    if (
+      isObject(value) &&
+      !value.$ref &&
+      value.in === 'path' &&
+      value.required !== true
+    )
+      issues.push({
+        location,
+        message: `Path parameter "${text(value.name) || '(unnamed)'}" must set required to true.`,
+      });
+  }
+  function checkParameters(value: unknown, location: string) {
+    if (Array.isArray(value))
+      value.forEach((parameter, index) =>
+        checkParameter(parameter, `${location}.parameters[${index}]`),
+      );
+  }
+  if (isObject(doc.components) && isObject(doc.components.parameters))
+    for (const [name, value] of Object.entries(doc.components.parameters))
+      checkParameter(value, `components.parameters.${name}`);
   const ids = new Set<string>();
-  for (const [path] of Object.entries(doc.paths ?? {})) {
+  for (const [path, item] of Object.entries(doc.paths ?? {})) {
+    if (path.startsWith('x-')) continue;
+    checkParameters(item.parameters, path);
     if (!path.startsWith('/') && !path.startsWith('x-'))
       issues.push({ location: path, message: 'API paths must start with /.' });
   }
   for (const { path, method, value } of listOperations(doc)) {
     const location = `${method.toUpperCase()} ${path}`;
+    checkParameters(value.parameters, location);
     if (
       !isObject(value.responses) ||
       Object.keys(value.responses).filter((key) => !key.startsWith('x-'))
