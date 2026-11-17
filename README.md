@@ -172,3 +172,9 @@ not AsyncAPI. Markdown preview can load images included in the Markdown.
 - Not every generator language or specification edge case has been exhaustively
   verified.
 
+
+## License
+
+ApiBldr is licensed under the [Apache License 2.0](LICENSE).
+Third-party dependencies and bundled specification schemas retain their respective
+licenses; see the [schema provenance](src/schemas/README.md) for bundled schema details.
